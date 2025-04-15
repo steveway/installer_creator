@@ -1,3 +1,4 @@
 .wix/
 installer_creator/__pycache__/
 installer_creator.egg-info/
+dist/
