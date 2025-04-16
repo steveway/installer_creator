@@ -4,10 +4,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "installer_creator"
-version = "0.1.3"
+version = "0.1.4"
 description = "Python package for compiling projects with Nuitka and creating Windows installers with Wix Toolset"
 readme = "README.md"
 requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+license = "LGPL-2.1 or later"
+license-file = "LICENSE"
+
+[project.urls]
+homepage = "https://github.com/steveway/installer_creator"
+issues = "https://github.com/steveway/installer_creator/issues"
+
 dependencies = [
     "nuitka",
     "pyyaml"
