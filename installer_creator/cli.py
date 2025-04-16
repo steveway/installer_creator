@@ -42,3 +42,6 @@ def main():
             print(uuid.uuid4())
         else:
             print('Please specify either --string or --random')
+
+if __name__ == '__main__':
+    main()
