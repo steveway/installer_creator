@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
 ]
-license = "LGPL-2.1 or later"
+license = "LGPL-3.0-or-later"
 license-file = "LICENSE"
 
 [project.urls]
