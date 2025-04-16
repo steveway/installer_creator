@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 license = "LGPL-3.0-or-later"
-license-file = "LICENSE"
+license-files = ["LICEN[CS]E*"]
 
 [project.urls]
 homepage = "https://github.com/steveway/installer_creator"
