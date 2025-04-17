@@ -40,8 +40,11 @@ build:
     standalone: true
     onefile: true
     splash_screen: ""
+    remove_output: true
   include:
     packages:
+      - ""
+    plugins:
       - ""
     data_dirs:
       - source: "resources"

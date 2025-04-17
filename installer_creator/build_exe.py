@@ -83,6 +83,9 @@ def build_nuitka_command(config: Dict[str, Any], python_exe: str) -> list:
         if package == "PySide6":
             cmd.append("--enable-plugin=pyside6")
 
+    for plugin in build['include'].get('plugins', []):
+        cmd.append(f"--enable-plugin={plugin}")
+
     # Data directories
     for data_dir in build['include'].get('data_dirs', []):
         source_path = data_dir['source']
@@ -92,6 +95,9 @@ def build_nuitka_command(config: Dict[str, Any], python_exe: str) -> list:
     # External data
     for data in build['include'].get('external_data', []):
         cmd.append(f"--include-onefile-external-data={data}")
+
+    if build['options'].get('remove_output', False):
+        cmd.append("--remove-output")
 
     # External files
     for file in build['include'].get('files', []):
