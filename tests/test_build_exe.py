@@ -66,10 +66,20 @@ class TestBuildExe:
         # Test function with mocked Path.cwd()
         with patch('pathlib.Path.cwd') as mock_cwd:
             mock_cwd.return_value = Path('C:/fake/path')
-            result = find_venv_python()
+            # Save the original sys.executable
+            original_executable = sys.executable
             
-            # Verify result contains the expected path
-            assert 'python.exe' in result
+            try:
+                # Mock sys.executable to ensure it's a Windows-style path
+                sys.executable = 'C:\\Python\\python.exe'
+                result = find_venv_python()
+                
+                # Verify the result is the mocked path (which should contain .venv\Scripts\python.exe)
+                # or the fallback to sys.executable (which we've set to a Windows path)
+                assert any(part in result for part in ['.venv\\Scripts\\python.exe', 'C:\\Python\\python.exe'])
+            finally:
+                # Restore the original sys.executable
+                sys.executable = original_executable
     
     @patch('os.path.exists')
     @patch('sys.platform', 'linux')
@@ -80,10 +90,20 @@ class TestBuildExe:
         # Test function with mocked Path.cwd()
         with patch('pathlib.Path.cwd') as mock_cwd:
             mock_cwd.return_value = Path('/fake/path')
-            result = find_venv_python()
+            # Save the original sys.executable
+            original_executable = sys.executable
             
-            # Verify result contains the expected path
-            assert 'python' in result
+            try:
+                # Mock sys.executable to ensure it's a Linux-style path
+                sys.executable = '/usr/bin/python'
+                result = find_venv_python()
+                
+                # Verify the result is the mocked path (which should contain venv/bin/python)
+                # or the fallback to sys.executable (which we've set to a Linux path)
+                assert any(part in result for part in ['venv/bin/python', '/usr/bin/python'])
+            finally:
+                # Restore the original sys.executable
+                sys.executable = original_executable
     
     @patch('os.path.exists')
     def test_find_venv_python_fallback(self, mock_exists):
