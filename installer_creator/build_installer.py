@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, Any
 import yaml
 import sys
+import html
 
 def build_wix_installer(config: Dict[str, Any]) -> None:
     """Build the WiX installer if enabled in config."""
@@ -71,6 +72,8 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
     project = config['project']
     build = config['build']
     build_output_dir = Path(build['output']['directory'])
+    manufacturer_sanitized = html.escape(installer['metadata']['manufacturer'])
+    product_name_sanitized = html.escape(installer['metadata']['product_name'])
 
     def sanitize_wix_id(name: str) -> str:
         """Replace invalid WiX ID characters with underscores, ensure valid start, and limit length."""
@@ -184,7 +187,7 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
                 # Create the component definition
                 component_xml = f'''
     <Component Id="{dir_component_id}" Guid="{str(uuid.uuid4())}" Directory="{dir_id}">{create_folder_xml}{files_xml}{remove_folder_xml}
-      <RegistryValue Root="HKCU" Key="Software\\{installer['metadata']['manufacturer']}\\{installer['metadata']['product_name']}\\{dir_component_id}" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\\{manufacturer_sanitized}\\{product_name_sanitized}\\{dir_component_id}" Name="installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>'''
                 
                 components_xml += component_xml
@@ -237,8 +240,8 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
-        Name="{installer['metadata']['product_name']}"
-        Manufacturer="{installer['metadata']['manufacturer']}"
+        Name="{product_name_sanitized}"
+        Manufacturer="{manufacturer_sanitized}"
         Version="{project['version']}"
         UpgradeCode="{installer['metadata']['upgrade_code']}"
         Scope="perMachine">
@@ -252,12 +255,12 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
         
         <!-- Add/Remove Programs Information -->{url_properties}
         <Property Id="ARPCOMMENTS" Value="{project['description']}" />
-        <Property Id="ARPCONTACT" Value="{installer['metadata']['manufacturer']}" />
+        <Property Id="ARPCONTACT" Value="{manufacturer_sanitized}" />
         <Property Id="ARPNOREPAIR" Value="1" />
         
         <!-- Directory Structure -->
         <StandardDirectory Id="ProgramFiles64Folder">
-            <Directory Id="INSTALLFOLDER" Name="{installer['metadata']['product_name']}">
+            <Directory Id="INSTALLFOLDER" Name="{product_name_sanitized}">
                 <Component Id="MainExecutable" Guid="{str(uuid.uuid4())}">
                     <File Id="MainEXE"
                           Name="{build['output']['filename']}"
@@ -269,7 +272,7 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
                     
                     <!-- Register application -->
                     <RegistryValue Root="HKLM"
-                                 Key="Software\\{installer['metadata']['product_name']}"
+                                 Key="Software\\{product_name_sanitized}"
                                  Name="InstallPath"
                                  Type="string"
                                  Value="[INSTALLFOLDER]" />
@@ -281,22 +284,22 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
         
         <!-- Start Menu -->
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ApplicationProgramsFolder" Name="{installer['metadata']['product_name']}">
+            <Directory Id="ApplicationProgramsFolder" Name="{product_name_sanitized}">
                 <Component Id="ApplicationShortcuts" Guid="{str(uuid.uuid4())}">
                     <Shortcut Id="ApplicationShortcut"
-                             Name="{installer['metadata']['product_name']}"
+                             Name="{product_name_sanitized}"
                              Description="{project['description']}"
                              Target="[INSTALLFOLDER]{build['output']['filename']}"
                              WorkingDirectory="INSTALLFOLDER"
                              Icon="app.ico" />
                     <Shortcut Id="UninstallProduct"
-                             Name="Uninstall {installer['metadata']['product_name']}"
-                             Description="Uninstall {installer['metadata']['product_name']}"
+                             Name="Uninstall {product_name_sanitized}"
+                             Description="Uninstall {product_name_sanitized}"
                              Target="[SystemFolder]msiexec.exe"
                              Arguments="/x [ProductCode]"/>
                     <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall" />
                     <RegistryValue Root="HKCU"
-                                 Key="Software\\{installer['metadata']['manufacturer']}\\{installer['metadata']['product_name']}"
+                                 Key="Software\\{manufacturer_sanitized}\\{product_name_sanitized}"
                                  Name="installed"
                                  Type="integer"
                                  Value="1"
@@ -306,7 +309,7 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
         </StandardDirectory>
         
         <!-- Features -->
-        <Feature Id="ProductFeature" Title="{installer['metadata']['product_name']}" Level="1">
+        <Feature Id="ProductFeature" Title="{product_name_sanitized}" Level="1">
             <ComponentRef Id="MainExecutable" />
             <ComponentRef Id="ApplicationShortcuts" />
             {copy_beside_component_refs_xml}
@@ -314,7 +317,7 @@ def generate_wix_source(config: Dict[str, Any]) -> str:
         
         <!-- UI -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-        <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Thank you for installing {installer['metadata']['product_name']}." />
+        <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Thank you for installing {product_name_sanitized}." />
         
         <!-- Custom UI Images -->
         <WixVariable Id="WixUIDialogBmp" Value="!(bindpath.UiImagesDir)\\{dialog_path}" />
