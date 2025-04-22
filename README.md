@@ -111,3 +111,28 @@ installer-creator build-exe -c build_config.yaml
 # Create installer
 installer-creator build-installer -c build_config.yaml
 ```
+
+## Testing
+
+The project includes a comprehensive test suite to ensure functionality works as expected. The tests cover:
+
+- Building executables with Nuitka
+- Creating Windows installers with WiX Toolset
+- Handling special characters in manufacturer and product names
+- Configuration validation and loading
+
+To run the tests:
+
+```bash
+# Install test dependencies
+pip install pytest
+
+# Run all tests
+python tests/run_tests.py
+
+# Or run specific tests
+pytest tests/test_build_exe.py
+pytest tests/test_build_installer.py
+```
+
+The test suite uses mocking to simulate the build environment, so you don't need to have WiX Toolset installed to run the tests.
