@@ -1,0 +1,912 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Build Configuration Editor</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>favicon.ico</normaloff>favicon.ico</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="projectTab">
+       <attribute name="title">
+        <string>Project</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QGroupBox" name="projectGroup">
+          <property name="title">
+           <string>Project Information</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="nameLabel">
+             <property name="text">
+              <string>Name:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="projectName"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="versionLabel">
+             <property name="text">
+              <string>Version:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="projectVersion"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="descriptionLabel">
+             <property name="text">
+              <string>Description:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLineEdit" name="projectDescription"/>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="companyLabel">
+             <property name="text">
+              <string>Company:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLineEdit" name="projectCompany"/>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="iconLabel">
+             <property name="text">
+              <string>Icon:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <layout class="QHBoxLayout" name="iconLayout">
+             <item>
+              <widget class="QLineEdit" name="projectIcon"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="iconBrowseButton">
+               <property name="text">
+                <string>Browse...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="mainFileLabel">
+             <property name="text">
+              <string>Main File:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <layout class="QHBoxLayout" name="mainFileLayout">
+             <item>
+              <widget class="QLineEdit" name="projectMainFile"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="mainFileBrowseButton">
+               <property name="text">
+                <string>Browse...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="buildTab">
+       <attribute name="title">
+        <string>Build</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QScrollArea" name="buildScrollArea">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="buildScrollContent">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>301</width>
+             <height>499</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QGroupBox" name="outputGroup">
+              <property name="title">
+               <string>Output</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_2">
+               <item row="0" column="0">
+                <widget class="QLabel" name="outputDirLabel">
+                 <property name="text">
+                  <string>Directory:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="outputDirLayout">
+                 <item>
+                  <widget class="QLineEdit" name="buildOutputDir"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="outputDirBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="outputFilenameLabel">
+                 <property name="text">
+                  <string>Filename:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="buildOutputFilename"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="optionsGroup">
+              <property name="title">
+               <string>Options</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_3">
+               <item row="0" column="0">
+                <widget class="QLabel" name="standaloneLabel">
+                 <property name="text">
+                  <string>Standalone:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="buildStandalone"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="onefileLabel">
+                 <property name="text">
+                  <string>Onefile:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="buildOnefile"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="removeOutputLabel">
+                 <property name="text">
+                  <string>Remove Output:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QCheckBox" name="buildRemoveOutput"/>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="splashScreenLabel">
+                 <property name="text">
+                  <string>Splash Screen:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <layout class="QHBoxLayout" name="splashScreenLayout">
+                 <item>
+                  <widget class="QLineEdit" name="buildSplashScreen"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="splashScreenBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="includeGroup">
+              <property name="title">
+               <string>Include</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QTabWidget" name="includeTabWidget">
+                 <property name="currentIndex">
+                  <number>0</number>
+                 </property>
+                 <widget class="QWidget" name="packagesTab">
+                  <attribute name="title">
+                   <string>Packages</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_6">
+                   <item>
+                    <widget class="QListWidget" name="packagesList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="packagesButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="packagesAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="packagesEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="packagesRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="pluginsTab">
+                  <attribute name="title">
+                   <string>Plugins</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_7">
+                   <item>
+                    <widget class="QListWidget" name="pluginsList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="pluginsButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="pluginsAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pluginsEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pluginsRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="dataDirsTab">
+                  <attribute name="title">
+                   <string>Data Directories</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_8">
+                   <item>
+                    <widget class="QListWidget" name="dataDirsList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="dataDirsButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="dataDirsAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="dataDirsEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="dataDirsRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="externalDataTab">
+                  <attribute name="title">
+                   <string>External Data</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_9">
+                   <item>
+                    <widget class="QListWidget" name="externalDataList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="externalDataButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="externalDataAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="externalDataEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="externalDataRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="filesTab">
+                  <attribute name="title">
+                   <string>Files</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_10">
+                   <item>
+                    <widget class="QListWidget" name="filesList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="filesButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="filesAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="filesEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="filesRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="copyBesideTab">
+                  <attribute name="title">
+                   <string>Copy Beside</string>
+                  </attribute>
+                  <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <item>
+                    <widget class="QListWidget" name="copyBesideList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="copyBesideButtonLayout">
+                     <item>
+                      <widget class="QPushButton" name="copyBesideAddButton">
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="copyBesideEditButton">
+                       <property name="text">
+                        <string>Edit</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="copyBesideRemoveButton">
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="copyBesideGroup">
+              <property name="title">
+               <string>Copy Beside</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_12">
+               <item>
+                <widget class="QCheckBox" name="copyBesideEnabled">
+                 <property name="text">
+                  <string>Enable Copy Beside</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="installerTab">
+       <attribute name="title">
+        <string>Installer</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="QCheckBox" name="installerEnabled">
+          <property name="text">
+           <string>Enable Installer Creation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QScrollArea" name="installerScrollArea">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="installerScrollContent">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>272</width>
+             <height>480</height>
+            </rect>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QGroupBox" name="installerOutputGroup">
+              <property name="title">
+               <string>Output</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_4">
+               <item row="0" column="0">
+                <widget class="QLabel" name="installerOutputDirLabel">
+                 <property name="text">
+                  <string>Directory:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="installerOutputDirLayout">
+                 <item>
+                  <widget class="QLineEdit" name="installerOutputDir"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="installerOutputDirBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="installerOutputFilenameLabel">
+                 <property name="text">
+                  <string>Filename:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="installerOutputFilename"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="metadataGroup">
+              <property name="title">
+               <string>Metadata</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_5">
+               <item row="0" column="0">
+                <widget class="QLabel" name="manufacturerLabel">
+                 <property name="text">
+                  <string>Manufacturer:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="installerManufacturer"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="productNameLabel">
+                 <property name="text">
+                  <string>Product Name:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="installerProductName"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="upgradeCodeLabel">
+                 <property name="text">
+                  <string>Upgrade Code:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <layout class="QHBoxLayout" name="upgradeCodeLayout">
+                 <item>
+                  <widget class="QLineEdit" name="installerUpgradeCode"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="generateUuidButton">
+                   <property name="text">
+                    <string>Generate UUID</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="uiGroup">
+              <property name="title">
+               <string>UI</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_6">
+               <item row="0" column="0">
+                <widget class="QLabel" name="bannerImageLabel">
+                 <property name="text">
+                  <string>Banner Image:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="bannerImageLayout">
+                 <item>
+                  <widget class="QLineEdit" name="installerBannerImage"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="bannerImageBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="dialogImageLabel">
+                 <property name="text">
+                  <string>Dialog Image:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <layout class="QHBoxLayout" name="dialogImageLayout">
+                 <item>
+                  <widget class="QLineEdit" name="installerDialogImage"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="dialogImageBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="licenseGroup">
+              <property name="title">
+               <string>License</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_7">
+               <item row="0" column="0">
+                <widget class="QLabel" name="licenseFileLabel">
+                 <property name="text">
+                  <string>License File:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <layout class="QHBoxLayout" name="licenseFileLayout">
+                 <item>
+                  <widget class="QLineEdit" name="installerLicenseFile"/>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="licenseFileBrowseButton">
+                   <property name="text">
+                    <string>Browse...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="shortcutsGroup">
+              <property name="title">
+               <string>Shortcuts</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout_8">
+               <item row="0" column="0">
+                <widget class="QLabel" name="desktopLabel">
+                 <property name="text">
+                  <string>Desktop:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="installerDesktopShortcut"/>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="startMenuLabel">
+                 <property name="text">
+                  <string>Start Menu:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="installerStartMenuShortcut"/>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="debugTab">
+       <attribute name="title">
+        <string>Debug</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_10">
+        <item>
+         <widget class="QCheckBox" name="debugEnabled">
+          <property name="text">
+           <string>Enable Debug Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="consoleGroup">
+          <property name="title">
+           <string>Console</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_9">
+           <item row="0" column="0">
+            <widget class="QLabel" name="modeLabel">
+             <property name="text">
+              <string>Mode:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="debugConsoleMode"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="excludeTab">
+       <attribute name="title">
+        <string>Exclude</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_11">
+        <item>
+         <widget class="QLabel" name="excludeLabel">
+          <property name="text">
+           <string>Patterns to exclude:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QListWidget" name="excludeList"/>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="excludeButtonLayout">
+          <item>
+           <widget class="QPushButton" name="excludeAddButton">
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="excludeEditButton">
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="excludeRemoveButton">
+            <property name="text">
+             <string>Remove</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="buildRunTab">
+       <attribute name="title">
+        <string>Build &amp; Run</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <layout class="QHBoxLayout" name="buildButtonsLayout">
+          <item>
+           <widget class="QPushButton" name="buildExeButton">
+            <property name="text">
+             <string>Build Executable</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buildInstallerButton">
+            <property name="text">
+             <string>Build Installer</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="clearOutputButton">
+            <property name="text">
+             <string>Clear Output</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="outputLabel">
+          <property name="text">
+           <string>Output:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="outputTextEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <widget class="QPushButton" name="loadButton">
+        <property name="text">
+         <string>Load Configuration</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="saveButton">
+        <property name="text">
+         <string>Save Configuration</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

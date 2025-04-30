@@ -1,3 +1,5 @@
 pyyaml
 nuitka
 pytest
+PySide6
+pywinpty
