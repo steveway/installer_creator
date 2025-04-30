@@ -33,6 +33,9 @@ if sys.platform == 'win32':
     except ImportError:
         print("Warning: pywinpty not installed. Windows terminal handling may be limited.")
         winpty = None
+else:
+    # On non-Windows platforms, set winpty to None
+    winpty = None
 
 class CommandSignals(QObject):
     """Signals for command execution"""
@@ -809,12 +812,14 @@ class ConfigEditorWindow(QMainWindow):
                             signals.status.emit("Build completed successfully!")
                     else:
                         # Fallback to subprocess for non-Windows or if winpty is not available
+                        signals.output.emit(f"Using standard subprocess on {sys.platform}...\n")
+                        
+                        # Convert command list to string for display
+                        cmd_str = ' '.join(f'"{arg}"' if ' ' in str(arg) or '\\' in str(arg) else str(arg) for arg in cmd)
+                        signals.output.emit(f"Executing command: {cmd_str}\n")
+                        
+                        # Create process with platform-specific settings
                         if sys.platform == 'win32':
-                            # Convert command to a string with proper quoting
-                            cmd_str = ' '.join(f'"{arg}"' if ' ' in str(arg) or '\\' in str(arg) else str(arg) for arg in cmd)
-                            signals.output.emit(f"Executing command: {cmd_str}\n")
-                            
-                            # Create process with shell=True
                             process = subprocess.Popen(
                                 cmd_str,
                                 shell=True,
@@ -827,7 +832,7 @@ class ConfigEditorWindow(QMainWindow):
                                 creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
                             )
                         else:
-                            # Create process
+                            # Linux/Unix process creation
                             process = subprocess.Popen(
                                 cmd,
                                 stdout=subprocess.PIPE,
@@ -835,7 +840,8 @@ class ConfigEditorWindow(QMainWindow):
                                 bufsize=1,
                                 universal_newlines=True,
                                 cwd=project_dir,
-                                env=env
+                                env=env,
+                                preexec_fn=os.setsid  # Use process group for Linux
                             )
                         
                         # Store the active process
@@ -937,7 +943,7 @@ class ConfigEditorWindow(QMainWindow):
             signals.output.emit(f"Error running command: {e}\n")
             import traceback
             signals.output.emit(f"Exception details: {traceback.format_exc()}\n")
-            # Clear the active process
+            # Clear the active process reference
             if hasattr(self, 'active_process'):
                 self.active_process = None
             # Signal that the command is finished
@@ -977,6 +983,10 @@ class ConfigEditorWindow(QMainWindow):
     def update_progress(self, value):
         """Update the progress bar."""
         self.progress_dialog.update_progress(value)
+    
+    def update_status(self, text):
+        """Update the status text."""
+        self.progress_dialog.update_status(text)
     
     def build_executable(self):
         """Build the executable using the current configuration."""
@@ -1170,7 +1180,7 @@ class ConfigEditorWindow(QMainWindow):
             print("Cancelling active process...")
             try:
                 # Check if the active process is a winpty process
-                if hasattr(self.active_process, 'terminate') and callable(getattr(self.active_process, 'terminate')):
+                if hasattr(self.active_process, 'terminate') and callable(getattr(self.active_process, 'terminate')) and 'winpty' in sys.modules and winpty is not None:
                     # For winpty processes
                     self.append_output("Terminating winpty process...\n")
                     self.active_process.terminate(force=True)
@@ -1191,8 +1201,25 @@ class ConfigEditorWindow(QMainWindow):
                             # Fallback to terminate
                             self.active_process.terminate()
                     else:
-                        # On other platforms, terminate is sufficient
-                        self.active_process.terminate()
+                        # On Linux/Unix, kill the process group
+                        try:
+                            # Get process group ID and kill it
+                            import signal
+                            os.killpg(os.getpgid(self.active_process.pid), signal.SIGTERM)
+                            self.append_output("Sent SIGTERM to process group\n")
+                            
+                            # Give it a moment to terminate gracefully
+                            import time
+                            time.sleep(0.5)
+                            
+                            # If still running, force kill
+                            if self.active_process.poll() is None:
+                                os.killpg(os.getpgid(self.active_process.pid), signal.SIGKILL)
+                                self.append_output("Sent SIGKILL to process group\n")
+                        except Exception as e:
+                            # Fallback to terminate if process group handling fails
+                            self.append_output(f"Error killing process group: {e}\n")
+                            self.active_process.terminate()
                 
                 # Clear the active process reference
                 self.active_process = None

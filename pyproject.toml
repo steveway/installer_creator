@@ -11,8 +11,7 @@ requires-python = ">=3.7"
 dependencies = [
     "nuitka>=1.8.0",
     "pyyaml>=6.0",
-    "psutil>=5.9.0",
-    "pywinpty"
+    "psutil>=5.9.0"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -30,6 +29,11 @@ classifiers = [
 ]
 license = "LGPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
+
+[project.optional-dependencies]
+windows = [
+    "pywinpty"
+]
 
 [tool.setuptools]
 packages = ["installer_creator"]
