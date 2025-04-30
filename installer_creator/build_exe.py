@@ -10,6 +10,8 @@ from .build_installer import build_wix_installer
 
 def find_venv_python() -> str:
     """Find the Python interpreter in the virtual environment."""
+    if os.environ.get('VIRTUAL_ENV'):
+        return os.environ['VIRTUAL_ENV']
     venv_dirs = ['.venv', 'venv', 'env']
     python_exe = "python.exe" if sys.platform == "win32" else "python"
     python_path = os.path.join("Scripts" if sys.platform == "win32" else "bin", python_exe)
@@ -58,6 +60,9 @@ def build_nuitka_command(config: Dict[str, Any], python_exe: str) -> list:
         cmd.append("--standalone")
     if build['options']['onefile']:
         cmd.append("--onefile")
+
+    for extra_parameter in build['options'].get('extra_parameters', []):
+        cmd.append(extra_parameter)
 
     # Project metadata
     if project.get('icon'):
