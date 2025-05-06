@@ -3,3 +3,4 @@ nuitka
 pytest
 PySide6
 pywinpty
+rich
