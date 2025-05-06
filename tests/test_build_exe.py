@@ -85,7 +85,7 @@ class TestBuildExe:
     @patch('sys.platform', 'linux')
     def test_find_venv_python_linux(self, mock_exists):
         # Setup mock to find Python in venv/bin
-        mock_exists.side_effect = lambda path: 'venv/bin/python' in path
+        mock_exists.side_effect = lambda path: 'venv/bin/python' in path.replace('\\', '/')
         
         # Test function with mocked Path.cwd()
         with patch('pathlib.Path.cwd') as mock_cwd:
@@ -100,7 +100,7 @@ class TestBuildExe:
                 
                 # Verify the result is the mocked path (which should contain venv/bin/python)
                 # or the fallback to sys.executable (which we've set to a Linux path)
-                assert any(part in result for part in ['venv/bin/python', '/usr/bin/python'])
+                assert any(part in result.replace('\\', '/') for part in ['venv/bin/python', '/usr/bin/python'])
             finally:
                 # Restore the original sys.executable
                 sys.executable = original_executable
@@ -110,11 +110,21 @@ class TestBuildExe:
         # Setup mock to not find any venv Python
         mock_exists.return_value = False
         
-        # Test function
-        result = find_venv_python()
+        # Save original executable
+        original_executable = sys.executable
         
-        # Verify result is the system executable
-        assert result == sys.executable
+        try:
+            # Test function
+            result = find_venv_python()
+            
+            # Verify result is the system executable - use case-insensitive comparison on Windows
+            if sys.platform == "win32":
+                assert result.lower() == sys.executable.lower()
+            else:
+                assert result == sys.executable
+        finally:
+            # Restore original
+            sys.executable = original_executable
     
     @patch('builtins.open', new_callable=mock_open, read_data=yaml.dump(TEST_CONFIG))
     def test_load_config(self, mock_file):
