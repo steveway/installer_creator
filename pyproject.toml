@@ -39,6 +39,12 @@ windows = [
 [tool.setuptools]
 packages = ["installer_creator"]
 
+[tool.setuptools.packages.find]
+where = ["installer_creator"]
+
+[tools.setuptools.package-data]
+installer_creator = ["*.ui", "*.ico", "*.png", "*.svg"]
+
 [project.urls]
 homepage = "https://github.com/steveway/installer_creator"
 issues = "https://github.com/steveway/installer_creator/issues"
