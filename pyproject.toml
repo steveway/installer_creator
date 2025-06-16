@@ -39,9 +39,6 @@ windows = [
 [tool.setuptools]
 packages = ["installer_creator"]
 
-[tool.setuptools.packages.find]
-where = ["installer_creator"]
-
 [tools.setuptools.package-data]
 installer_creator = ["*.ui", "*.ico", "*.png", "*.svg"]
 
