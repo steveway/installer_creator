@@ -231,16 +231,35 @@ def build_nuitka_command(config: Dict[str, Any], python_exe: str) -> list:
     cmd.extend([f"--output-dir={output_dir}", f"--output-filename={file_name}"])
 
     # Debug settings
-    debug = config.get("debug", {})
-    if debug.get("enabled", False):
-        cmd.extend(
-            [
-                "--windows-console-mode=force",
-                "--force-stdout-spec={PROGRAM_BASE}.out.txt",
-                "--force-stderr-spec={PROGRAM_BASE}.err.txt",
-            ]
-        )
+    debug_config = config.get("debug", {})
+    if debug_config.get("enabled", False):
+        console_config = debug_config.get("console", {})
+        console_mode = console_config.get("mode", "disable") # Default to disable if not specified
+
+        if console_mode == "force":
+            cmd.append("--windows-console-mode=force")
+        elif console_mode == "attach":
+            cmd.append("--windows-console-mode=attach")
+        elif console_mode == "disable":
+            cmd.append("--windows-console-mode=disable")
+        # If other modes are added in Nuitka or our config, they can be handled here
+
+        # Handle stdout and stderr redirection if console is not disabled
+        if console_mode != "disable":
+            stdout_path = console_config.get("stdout")
+            stderr_path = console_config.get("stderr")
+
+            if stdout_path:
+                cmd.append(f"--force-stdout-spec={stdout_path}")
+            elif console_mode == "force": # Default for forced console if not specified
+                cmd.append("--force-stdout-spec={PROGRAM_BASE}.out.txt")
+            
+            if stderr_path:
+                cmd.append(f"--force-stderr-spec={stderr_path}")
+            elif console_mode == "force": # Default for forced console if not specified
+                cmd.append("--force-stderr-spec={PROGRAM_BASE}.err.txt")
     else:
+        # If debug is not enabled, ensure console is disabled
         cmd.append("--windows-console-mode=disable")
 
     return cmd

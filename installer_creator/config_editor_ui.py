@@ -222,6 +222,7 @@ class ConfigEditorWindow(QMainWindow):
         self.ui.buildExeButton.clicked.connect(self.build_executable)
         self.ui.buildInstallerButton.clicked.connect(self.build_installer)
         self.ui.clearOutputButton.clicked.connect(self.clear_output)
+        self.ui.openOutputFolderButton.clicked.connect(self.open_output_folder)
 
         # Set up debug console mode combobox
         self.ui.debugConsoleMode.addItems(["disabled", "enabled", "force"])
@@ -231,6 +232,12 @@ class ConfigEditorWindow(QMainWindow):
 
         # Connect inputs to modification flag
         self.connect_modification_signals()
+
+    def open_output_folder(self):
+        """Open the output folder in the file explorer."""
+        output_dir = self.ui.buildOutputDir.text()
+        if output_dir:
+            os.startfile(output_dir)
 
     def set_modified(self, modified=True):
         """Set the modified state and update the window title."""
@@ -627,6 +634,15 @@ class ConfigEditorWindow(QMainWindow):
             if index >= 0:
                 self.ui.debugConsoleMode.setCurrentIndex(index)
 
+            # Set stdout and stderr paths if they exist
+            stdout_path = console.get("stdout")
+            stderr_path = console.get("stderr")
+
+            if stdout_path:
+                self.ui.debugConsoleStdout.setText(stdout_path)
+            if stderr_path:
+                self.ui.debugConsoleStderr.setText(stderr_path)
+
             # Load exclude section
             self.set_list_items(
                 self.ui.excludeList, self.config_data.get("exclude", [])
@@ -751,10 +767,13 @@ class ConfigEditorWindow(QMainWindow):
             debug["enabled"] = self.ui.debugEnabled.isChecked()
 
             # Console
+            stdout_path = self.ui.debugConsoleStdout.text().strip()
+            stderr_path = self.ui.debugConsoleStderr.text().strip()
+
             debug["console"] = {
                 "mode": self.ui.debugConsoleMode.currentText(),
-                "stdout": None,
-                "stderr": None,
+                "stdout": stdout_path if stdout_path else None,
+                "stderr": stderr_path if stderr_path else None,
             }
 
             config["debug"] = debug
