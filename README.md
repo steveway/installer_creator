@@ -6,6 +6,8 @@ Python package for compiling projects with Nuitka and creating Windows installer
 
 - **One-click builds** - Compile Python to EXE and create installers with a single command
 - **Graphical Config Editor** - Intuitive UI for managing build configurations
+- **Python Path Selection** - Manually specify Python executable or auto-detect virtual environments
+- **File Browser Integration** - Easily add files and resources with a file dialog
 - **Real-time Progress** - View build output and cancel long-running operations
 - **Upgrade Code Management** - Generate consistent UUIDs for product upgrades
 - **Flexible Configuration** - Support for complex build scenarios and dependencies
@@ -65,6 +67,9 @@ installer-creator generate-uuid -s "MyAppName"
 # Build executable with custom config
 installer-creator build-exe -c custom_config.yaml --verbose
 
+# Build with specific Python executable
+installer-creator build-exe --python-path "C:\\path\\to\\python.exe"
+
 # Create installer with debug output
 installer-creator build-installer -c custom_config.yaml --debug
 ```
@@ -109,6 +114,7 @@ project:
   company: ""
   icon: "app_icon.ico"  # Optional icon file
   main_file: "main.py"  # Entry point file
+  python_path: ""  # Optional path to Python executable (auto-detected if empty)
 
 build:
   output:
@@ -186,6 +192,8 @@ The configuration editor provides a graphical interface for:
 - Building executables and installers directly from the GUI
 - Viewing real-time build output
 - Canceling builds in progress
+- Specifying a custom Python executable path
+- Browsing and selecting files with a native file dialog
 
 To launch the GUI, simply run:
 ```bash

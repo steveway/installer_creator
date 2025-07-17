@@ -41,6 +41,9 @@ def main():
     build_exe_parser.add_argument(
         "--debug", action="store_true", help="Enable debug mode"
     )
+    build_exe_parser.add_argument(
+        "--python-path", help="Path to Python executable to use for building"
+    )
 
     # Build Installer command
     build_installer_parser = subparsers.add_parser(
@@ -106,7 +109,7 @@ def main():
     try:  # Main command execution block
         if args.command == "build-exe":
             console.print(f"[info]Starting build-exe with config: {args.config}[/info]")
-            build_exe.main(config_file=args.config)
+            build_exe.main(config_file=args.config, python_path=args.python_path)
             console.print("[info]Build executable finished.[/info]")
 
         elif args.command == "build-installer":

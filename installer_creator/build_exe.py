@@ -301,11 +301,12 @@ def _enqueue_output(out_pty, queue_obj, winpty_module_ref):
         queue_obj.put(None)  # Crucial: always signal EOF to the main thread
 
 
-def main(config_file="build_config.yaml"):
+def main(config_file="build_config.yaml", python_path=None):
     """Build executable with Nuitka
 
     Args:
         config_file: Path to configuration YAML file
+        python_path: Optional path to Python executable to use for building
     """
     global active_process
 
@@ -329,9 +330,13 @@ def main(config_file="build_config.yaml"):
         # required within ``build_nuitka_command`` it can detect the absence
         # of this key and operate on relative paths instead.
 
-        # Find virtual environment Python
-        python_exe = find_venv_python()
-        print(f"Using Python executable: {python_exe}")
+        # Find Python executable - use provided path or find virtual environment Python
+        if python_path:
+            python_exe = python_path
+            print(f"Using manually specified Python executable: {python_exe}")
+        else:
+            python_exe = find_venv_python()
+            print(f"Using auto-detected Python executable: {python_exe}")
         sys.stdout.flush()
 
         # Verify Python executable exists – using pathlib so tests can patch
@@ -414,9 +419,7 @@ def main(config_file="build_config.yaml"):
         print(f"Command: {' '.join(cmd)}")
         sys.stdout.flush()
 
-        # Send initial progress update
-        print("PROGRESS:10:Starting build process...")
-        sys.stdout.flush()
+
 
         try:
             # On Windows, use pywinpty if available
@@ -445,15 +448,7 @@ def main(config_file="build_config.yaml"):
                 reader_thread.daemon = True
                 reader_thread.start()
 
-                line_count = 0
-                last_progress = 10
                 last_output_time = time.time()
-                last_progress_time = time.time()
-
-                # Heartbeat animation state
-                heartbeat_chars = ["-", "\\", "|", "/"]
-                heartbeat_idx = 0
-                heartbeat_len = 0  # Length of the last heartbeat message
 
                 while True:
                     try:
@@ -461,123 +456,13 @@ def main(config_file="build_config.yaml"):
                         if output_chunk is None:
                             break
 
-                        # Clear heartbeat from stderr if it was active
-                        if heartbeat_len > 0:
-                            sys.stderr.write("\r" + " " * heartbeat_len + "\r")
-                            sys.stderr.flush()
-                            heartbeat_len = 0
-
                         sys.stdout.write(output_chunk)
                         sys.stdout.flush()
                         last_output_time = time.time()
 
-                        line_count += output_chunk.count("\n")
-                        if not output_chunk.endswith("\n"):
-                            line_count += 1
-
-                        progress_updated = False
-
-                        # Helper to print progress messages cleanly
-                        def print_progress_message(msg):
-                            nonlocal heartbeat_len  # Allow modification
-                            if heartbeat_len > 0:  # Clear stderr heartbeat
-                                sys.stderr.write("\r" + " " * heartbeat_len + "\r")
-                                sys.stderr.flush()
-                                heartbeat_len = 0
-
-                            # Ensure we start on a fresh line so we don't disturb Nuitka's progress bar
-                            sys.stdout.write("\n")
-                            sys.stdout.write(msg + "\n")
-                            sys.stdout.flush()
-
-                        if "Nuitka-Options:" in output_chunk:
-                            print_progress_message(
-                                "PROGRESS:30:Configuring Nuitka options..."
-                            )
-                            progress_updated = True
-                        elif (
-                            "Nuitka:INFO:" in output_chunk
-                            and "Starting Python compilation" in output_chunk
-                        ):
-                            print_progress_message(
-                                "PROGRESS:35:Starting Python compilation..."
-                            )
-                            progress_updated = True
-                        elif (
-                            "Nuitka:INFO:" in output_chunk
-                            and "C compiler" in output_chunk
-                        ):
-                            print_progress_message(
-                                "PROGRESS:40:Setting up C compiler..."
-                            )
-                            progress_updated = True
-                        elif "Compiling" in output_chunk and "module" in output_chunk:
-                            print_progress_message(
-                                "PROGRESS:45:Compiling Python modules..."
-                            )
-                            progress_updated = True
-                        elif "Generating" in output_chunk and "C code" in output_chunk:
-                            print_progress_message("PROGRESS:50:Generating C code...")
-                            progress_updated = True
-                        elif "Building extension modules" in output_chunk:
-                            print_progress_message(
-                                "PROGRESS:55:Building extension modules..."
-                            )
-                            progress_updated = True
-                        elif (
-                            "Linking" in output_chunk
-                            and ("executable" in output_chunk or "modules" in output_chunk)
-                        ):
-                            print_progress_message("PROGRESS:60:Linking modules...")
-                            progress_updated = True
-                        elif (
-                            "Nuitka-Postprocessing:" in output_chunk
-                            or "Nuitka-Onefile:" in output_chunk
-                        ):
-                            print_progress_message(
-                                "PROGRESS:75:Post-processing / Onefile operations..."
-                            )
-                            progress_updated = True
-                        elif "Nuitka: Successfully created" in output_chunk:
-                            print_progress_message(
-                                "PROGRESS:95:Build completed successfully!"
-                            )
-                            progress_updated = True
-
-                        current_time = time.time()
-                        if (
-                            not progress_updated
-                            and (current_time - last_progress_time) > 5
-                        ):
-                            new_progress = min(90, 30 + (line_count // 20))
-                            if new_progress > last_progress:
-                                print_progress_message(
-                                    f"PROGRESS:{new_progress}:Building... (Line {line_count})"
-                                )
-                                last_progress = new_progress
-                                last_progress_time = current_time
-
                     except queue.Empty:
-                        current_time = time.time()
                         if not term.isalive() and output_queue.empty():
-                            # Clear final heartbeat if any before exiting loop
-                            if heartbeat_len > 0:
-                                sys.stderr.write("\r" + " " * heartbeat_len + "\r")
-                                sys.stderr.flush()
-                                heartbeat_len = 0
                             break
-                        elif term.isalive() and (current_time - last_output_time) > 5.0:
-                            anim_char = heartbeat_chars[heartbeat_idx]
-                            heartbeat_msg_str = (
-                                f"Nuitka still processing... {anim_char}"
-                            )
-                            # Clear previous heartbeat from stderr before writing new one
-                            sys.stderr.write("\r" + " " * heartbeat_len + "\r")
-                            sys.stderr.write(heartbeat_msg_str)
-                            sys.stderr.flush()
-                            heartbeat_len = len(heartbeat_msg_str)
-                            heartbeat_idx = (heartbeat_idx + 1) % len(heartbeat_chars)
-                            # Don't reset last_output_time here, only when actual output comes
                         continue
                     except Exception as e:
                         print(f"Error processing PTY output from queue: {e}")

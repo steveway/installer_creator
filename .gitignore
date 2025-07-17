@@ -3,3 +3,4 @@ installer_creator/__pycache__/
 installer_creator.egg-info/
 dist/
 tests/__pycache__/
+build/

@@ -57,47 +57,128 @@ else:
 
 
 class CommandSignals(QObject):
-    """Signals for command execution"""
+    """Signals for command execution with dual progress support"""
 
     output = Signal(str)
+    overall_progress = Signal(int)
+    overall_status = Signal(str)
+    task_progress = Signal(int)
+    task_status = Signal(str)
+    finished = Signal(int)
+    
+    # Legacy signals for backward compatibility
     progress = Signal(int)
     status = Signal(str)
-    finished = Signal(int)
 
 
 class ProgressDialog(QDialog):
-    """Dialog for showing build progress."""
+    """Dialog for showing build progress with dual progress bars."""
 
     def __init__(self, parent=None, title="Building..."):
         super().__init__(parent)
 
         self.setWindowTitle(title)
-        self.setMinimumWidth(400)
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(200)
 
         layout = QVBoxLayout(self)
 
-        self.status_label = QLabel("Initializing...")
-        layout.addWidget(self.status_label)
+        # Overall status and progress
+        self.overall_status_label = QLabel("Initializing...")
+        self.overall_status_label.setStyleSheet("font-weight: bold; color: #2c3e50;")
+        layout.addWidget(self.overall_status_label)
 
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
-        layout.addWidget(self.progress_bar)
+        self.overall_progress_bar = QProgressBar()
+        self.overall_progress_bar.setRange(0, 100)
+        self.overall_progress_bar.setValue(0)
+        self.overall_progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #3498db;
+                border-radius: 5px;
+                text-align: center;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background-color: #3498db;
+                border-radius: 3px;
+            }
+        """)
+        layout.addWidget(self.overall_progress_bar)
+
+        # Add some spacing
+        layout.addSpacing(10)
+
+        # Current task status and progress
+        self.task_status_label = QLabel("Waiting for task...")
+        self.task_status_label.setStyleSheet("color: #7f8c8d;")
+        layout.addWidget(self.task_status_label)
+
+        self.task_progress_bar = QProgressBar()
+        self.task_progress_bar.setRange(0, 100)
+        self.task_progress_bar.setValue(0)
+        self.task_progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #27ae60;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background-color: #27ae60;
+                border-radius: 3px;
+            }
+        """)
+        layout.addWidget(self.task_progress_bar)
+
+        # Add some spacing
+        layout.addSpacing(15)
 
         # Add a cancel button
         self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.setStyleSheet("""
+            QPushButton {
+                background-color: #e74c3c;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+            QPushButton:pressed {
+                background-color: #a93226;
+            }
+        """)
         layout.addWidget(self.cancel_button)
 
         # Don't allow closing with X button
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowCloseButtonHint)
 
+    def update_overall_progress(self, value):
+        """Update the overall progress bar."""
+        self.overall_progress_bar.setValue(value)
+
+    def update_overall_status(self, text):
+        """Update the overall status text."""
+        self.overall_status_label.setText(text)
+
+    def update_task_progress(self, value):
+        """Update the current task progress bar."""
+        self.task_progress_bar.setValue(value)
+
+    def update_task_status(self, text):
+        """Update the current task status text."""
+        self.task_status_label.setText(text)
+
+    # Legacy methods for backward compatibility
     def update_progress(self, value):
-        """Update the progress bar."""
-        self.progress_bar.setValue(value)
+        """Update the overall progress bar (legacy method)."""
+        self.update_overall_progress(value)
 
     def update_status(self, text):
-        """Update the status text."""
-        self.status_label.setText(text)
+        """Update the overall status text (legacy method)."""
+        self.update_overall_status(text)
 
 
 class DataDirDialog(QDialog):
@@ -189,6 +270,9 @@ class ConfigEditorWindow(QMainWindow):
         )
         self.ui.mainFileBrowseButton.clicked.connect(
             lambda: self.browse_file(self.ui.projectMainFile, "Python Files (*.py)")
+        )
+        self.ui.pythonPathBrowseButton.clicked.connect(
+            lambda: self.browse_file(self.ui.projectPythonPath, "Python Executable (*.exe)" if sys.platform == "win32" else "Python Executable (*)")
         )
         self.ui.outputDirBrowseButton.clicked.connect(
             lambda: self.browse_directory(self.ui.buildOutputDir)
@@ -374,7 +458,7 @@ class ConfigEditorWindow(QMainWindow):
         # Files
         if hasattr(self.ui, "filesAddButton"):
             self.ui.filesAddButton.clicked.connect(
-                lambda: self.add_list_item(self.ui.filesList)
+                lambda: self.add_file_item(self.ui.filesList)
             )
             self.ui.filesEditButton.clicked.connect(
                 lambda: self.edit_list_item(self.ui.filesList)
@@ -491,6 +575,15 @@ class ConfigEditorWindow(QMainWindow):
             list_widget.addItem(text)
             self.set_modified(True)
 
+    def add_file_item(self, list_widget):
+        """Add a new file item to the list widget using file dialog."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self.ui, "Select File to Include", "", "All Files (*)"
+        )
+        if file_path:
+            list_widget.addItem(file_path)
+            self.set_modified(True)
+
     def edit_list_item(self, list_widget):
         """Edit the selected item in the list widget."""
         current_item = list_widget.currentItem()
@@ -544,6 +637,9 @@ class ConfigEditorWindow(QMainWindow):
             self.ui.projectCompany.setText(project.get("company", ""))
             self.ui.projectIcon.setText(project.get("icon", ""))
             self.ui.projectMainFile.setText(project.get("main_file", ""))
+            # Load Python path if available
+            if hasattr(self.ui, "projectPythonPath"):
+                self.ui.projectPythonPath.setText(project.get("python_path", ""))
 
             # Load build section
             build = self.config_data.get("build", {})
@@ -666,7 +762,7 @@ class ConfigEditorWindow(QMainWindow):
             config = {}
 
             # Project section
-            config["project"] = {
+            project_config = {
                 "name": self.ui.projectName.text(),
                 "version": self.ui.projectVersion.text(),
                 "description": self.ui.projectDescription.text(),
@@ -674,6 +770,13 @@ class ConfigEditorWindow(QMainWindow):
                 "icon": self.ui.projectIcon.text(),
                 "main_file": self.ui.projectMainFile.text(),
             }
+            # Add Python path if available and not empty
+            if hasattr(self.ui, "projectPythonPath"):
+                python_path = self.ui.projectPythonPath.text().strip()
+                if python_path:
+                    project_config["python_path"] = python_path
+            
+            config["project"] = project_config
 
             # Build section
             build = {}
@@ -842,9 +945,15 @@ class ConfigEditorWindow(QMainWindow):
         # Create signals to update UI from thread
         signals = CommandSignals()
         signals.output.connect(self.append_output)
+        signals.overall_progress.connect(self.update_overall_progress)
+        signals.overall_status.connect(self.update_overall_status)
+        signals.task_progress.connect(self.update_task_progress)
+        signals.task_status.connect(self.update_task_status)
+        signals.finished.connect(self.command_finished)
+        
+        # Legacy signal connections for backward compatibility
         signals.progress.connect(self.update_progress)
         signals.status.connect(self.update_status)
-        signals.finished.connect(self.command_finished)
 
         # Create a thread to run the command
         thread = threading.Thread(
@@ -883,19 +992,41 @@ class ConfigEditorWindow(QMainWindow):
             env = os.environ.copy()
             env["NUITKA_PLAIN_PROGRESS"] = "1"
 
-            # Define progress markers
-            progress_markers = {
-                "Nuitka-Options:": 30,
-                "Starting Python compilation": 35,
-                "C compiler": 40,
-                "Compiling": 45,
-                "Generating": 50,
-                "Building extension modules": 55,
-                "Linking": 60,
-                "Packaging": 75,
-                "Copying": 85,
-                "Executable built successfully": 95,
+            # Define overall progress phases and their progress ranges
+            overall_phases = {
+                "initialization": {"start": 0, "end": 10, "message": "Initializing build process..."},
+                "nuitka_setup": {"start": 10, "end": 20, "message": "Setting up Nuitka environment..."},
+                "compilation": {"start": 20, "end": 70, "message": "Compiling application..."},
+                "packaging": {"start": 70, "end": 90, "message": "Packaging executable..."},
+                "finalization": {"start": 90, "end": 100, "message": "Finalizing build..."}
             }
+            
+            # Define detailed Nuitka progress markers for task-specific progress
+            nuitka_markers = {
+                "Nuitka-Options:": {"phase": "nuitka_setup", "task_progress": 50, "message": "Configuring Nuitka options..."},
+                "Starting Python compilation": {"phase": "compilation", "task_progress": 5, "message": "Starting Python compilation..."},
+                "C compiler": {"phase": "compilation", "task_progress": 15, "message": "Setting up C compiler..."},
+                "Compiling": {"phase": "compilation", "task_progress": 30, "message": "Compiling Python modules..."},
+                "Generating": {"phase": "compilation", "task_progress": 50, "message": "Generating C code..."},
+                "Building extension modules": {"phase": "compilation", "task_progress": 70, "message": "Building extension modules..."},
+                "Linking": {"phase": "compilation", "task_progress": 85, "message": "Linking modules..."},
+                "Packaging": {"phase": "packaging", "task_progress": 30, "message": "Packaging application..."},
+                "Copying": {"phase": "packaging", "task_progress": 70, "message": "Copying dependencies..."},
+                "Executable built successfully": {"phase": "finalization", "task_progress": 100, "message": "Build completed successfully!"},
+                # Additional common Nuitka patterns
+                "Nuitka:INFO:": {"phase": "nuitka_setup", "task_progress": 10, "message": "Nuitka initialization..."},
+                "Nuitka:WARNING:": {"phase": "compilation", "task_progress": 20, "message": "Processing warnings..."},
+                "Used Python": {"phase": "nuitka_setup", "task_progress": 30, "message": "Python environment detected..."},
+                "Creating single file": {"phase": "packaging", "task_progress": 50, "message": "Creating single file executable..."},
+                "Optimization": {"phase": "compilation", "task_progress": 60, "message": "Optimizing code..."},
+                "Backend C compiler": {"phase": "compilation", "task_progress": 25, "message": "Configuring C compiler..."},
+                "Total memory usage": {"phase": "finalization", "task_progress": 90, "message": "Finalizing build..."}
+            }
+            
+            # Initialize progress tracking
+            current_phase = "initialization"
+            last_overall_progress = 0
+            last_task_progress = 0
 
             # Create command
             if command == "build-exe":
@@ -905,6 +1036,11 @@ class ConfigEditorWindow(QMainWindow):
                     "installer_creator.build_exe",
                     config_file_path,
                 ]
+                # Add Python path argument if specified in GUI
+                if hasattr(self.ui, "projectPythonPath"):
+                    python_path = self.ui.projectPythonPath.text().strip()
+                    if python_path:
+                        cmd.extend(["--python-path", python_path])
                 if args:
                     cmd.extend(args)
                 signals.output.emit(f"Running command: {' '.join(cmd)}\n")
@@ -976,9 +1112,14 @@ class ConfigEditorWindow(QMainWindow):
                         term = winpty.PtyProcess.spawn(cmd, cwd=project_dir, env=env)
                         self.active_process = term
 
-                        # Process output in real-time
+                        # Initialize dual progress tracking
                         line_count = 0
-                        last_progress = 10
+                        
+                        # Set initial progress
+                        signals.overall_progress.emit(overall_phases[current_phase]["start"])
+                        signals.overall_status.emit(overall_phases[current_phase]["message"])
+                        signals.task_progress.emit(0)
+                        signals.task_status.emit("Waiting for Nuitka output...")
 
                         # Read output in a loop
                         while True:
@@ -1008,6 +1149,10 @@ class ConfigEditorWindow(QMainWindow):
                                         # Send output to UI
                                         signals.output.emit(clean_line)
                                         line_count += 1
+                                        
+                                        # Debug: Log lines that might contain progress info
+                                        if any(pattern in clean_line.lower() for pattern in ['%', 'compiling', 'progress', 'done', 'nuitka', 'payload']):
+                                            signals.output.emit(f"[DEBUG] Progress line detected: {clean_line.strip()}\n")
 
                                         # Check for explicit progress markers
                                         if clean_line.strip().startswith("PROGRESS:"):
@@ -1020,76 +1165,103 @@ class ConfigEditorWindow(QMainWindow):
                                                         if len(parts) > 2
                                                         else ""
                                                     )
+                                                    # Use legacy signals for explicit progress markers
                                                     signals.progress.emit(progress)
-                                                    last_progress = progress
                                                     if message:
                                                         signals.status.emit(message)
                                                 continue
                                             except (ValueError, IndexError):
                                                 pass
 
-                                        # Update progress based on output content
-                                        for (
-                                            marker,
-                                            progress,
-                                        ) in progress_markers.items():
-                                            if (
-                                                marker in clean_line
-                                                and progress > last_progress
-                                            ):
-                                                signals.progress.emit(progress)
-                                                last_progress = progress
-                                                # Update status message based on the marker
-                                                if "Nuitka-Options:" in clean_line:
-                                                    signals.status.emit(
-                                                        "Configuring Nuitka options..."
-                                                    )
-                                                elif (
-                                                    "Starting Python compilation"
-                                                    in clean_line
-                                                ):
-                                                    signals.status.emit(
-                                                        "Starting Python compilation..."
-                                                    )
-                                                elif "C compiler" in clean_line:
-                                                    signals.status.emit(
-                                                        "Setting up C compiler..."
-                                                    )
-                                                elif "Compiling" in clean_line:
-                                                    signals.status.emit(
-                                                        "Compiling Python modules..."
-                                                    )
-                                                elif "Generating" in clean_line:
-                                                    signals.status.emit(
-                                                        "Generating C code..."
-                                                    )
-                                                elif (
-                                                    "Building extension modules"
-                                                    in clean_line
-                                                ):
-                                                    signals.status.emit(
-                                                        "Building extension modules..."
-                                                    )
-                                                elif "Linking" in clean_line:
-                                                    signals.status.emit(
-                                                        "Linking modules..."
-                                                    )
-                                                elif "Packaging" in clean_line:
-                                                    signals.status.emit(
-                                                        "Packaging application..."
-                                                    )
-                                                elif "Copying" in clean_line:
-                                                    signals.status.emit(
-                                                        "Copying dependencies..."
-                                                    )
-                                                elif (
-                                                    "Executable built successfully"
-                                                    in clean_line
-                                                ):
-                                                    signals.status.emit(
-                                                        "Build completed successfully!"
-                                                    )
-                                                break
+                                        # Enhanced dual progress tracking based on Nuitka output
+                                        progress_updated = False
+                                        
+                                        # Unified progress bar pattern matching
+                                        # Matches formats like:
+                                        # - "PASS 1: 72.5%|████████████████████▏ | 174/240, module_name"
+                                        # - "Onefile Payload: 1.1%|▎ | 102/9164, numpy.libs\msvcp140-"
+                                        # - "Any Task: 45.2%|██████████ | 123/456, item_name"
+                                        progress_bar_match = re.search(r'([^:]+):\s+(\d+(?:\.\d+)?)%.*?\|\s*(\d+)/(\d+),\s*(.+)', clean_line)
+                                        if progress_bar_match:
+                                            task_type = progress_bar_match.group(1).strip()
+                                            nuitka_percent = float(progress_bar_match.group(2))
+                                            current_item = int(progress_bar_match.group(3))
+                                            total_items = int(progress_bar_match.group(4))
+                                            item_name = progress_bar_match.group(5).strip()
+                                            
+                                            # Create appropriate status message based on task type
+                                            if "PASS" in task_type.upper():
+                                                status_msg = f"Compiling {item_name} ({current_item}/{total_items}) - {nuitka_percent:.1f}%"
+                                            elif "ONEFILE" in task_type.upper() or "PAYLOAD" in task_type.upper():
+                                                status_msg = f"Packaging {item_name} ({current_item}/{total_items}) - {nuitka_percent:.1f}%"
+                                            else:
+                                                status_msg = f"{task_type}: {item_name} ({current_item}/{total_items}) - {nuitka_percent:.1f}%"
+                                            
+                                            # Update task progress bar
+                                            signals.task_progress.emit(int(nuitka_percent))
+                                            signals.task_status.emit(status_msg)
+                                            signals.output.emit(f"[DEBUG] Progress bar matched: {task_type} - {nuitka_percent:.1f}%\n")
+                                            progress_updated = True
+                                        
+                                        # Fallback: Simple percentage patterns for other formats
+                                        elif not progress_updated:
+                                            # Match [XX%], "XX% done", "Progress: XX%", etc.
+                                            simple_percent_match = re.search(r'(\d+(?:\.\d+)?)%', clean_line)
+                                            if simple_percent_match and any(keyword in clean_line.lower() for keyword in ['progress', 'done', 'compiling', 'building', 'generating']):
+                                                nuitka_percent = float(simple_percent_match.group(1))
+                                                signals.task_progress.emit(int(nuitka_percent))
+                                                
+                                                # Clean up the status message
+                                                task_desc = clean_line.strip()
+                                                if len(task_desc) > 100:
+                                                    task_desc = task_desc[:97] + "..."
+                                                signals.task_status.emit(task_desc)
+                                                signals.output.emit(f"[DEBUG] Simple percentage matched: {nuitka_percent:.1f}%\n")
+                                                progress_updated = True
+                                        
+                                        # Check for phase markers if no percentage was found
+                                        if not progress_updated:
+                                            for marker, marker_info in nuitka_markers.items():
+                                                if marker.lower() in clean_line.lower():
+                                                    # Update current phase if needed
+                                                    new_phase = marker_info["phase"]
+                                                    if new_phase != current_phase:
+                                                        current_phase = new_phase
+                                                        # Reset task progress when entering new phase
+                                                        signals.task_progress.emit(0)
+                                                        last_task_progress = 0
+                                                    
+                                                    # Calculate overall progress based on phase
+                                                    phase_info = overall_phases[current_phase]
+                                                    phase_range = phase_info["end"] - phase_info["start"]
+                                                    task_progress_in_phase = (marker_info["task_progress"] / 100) * phase_range
+                                                    new_overall_progress = int(phase_info["start"] + task_progress_in_phase)
+                                                    
+                                                    # Update progress bars only if progress increased
+                                                    if new_overall_progress > last_overall_progress:
+                                                        signals.overall_progress.emit(new_overall_progress)
+                                                        signals.overall_status.emit(phase_info["message"])
+                                                        last_overall_progress = new_overall_progress
+                                                    
+                                                    # Update task progress
+                                                    if marker_info["task_progress"] > last_task_progress:
+                                                        signals.task_progress.emit(marker_info["task_progress"])
+                                                        signals.task_status.emit(marker_info["message"])
+                                                        last_task_progress = marker_info["task_progress"]
+                                                    
+                                                    break
+                                        
+                                        # Additional patterns for common Nuitka output
+                                        # Pattern for "Compiling module 'xyz' (X of Y)"
+                                        module_match = re.search(r'compiling.*?\((\d+)\s+of\s+(\d+)\)', clean_line, re.IGNORECASE)
+                                        if module_match and not progress_updated:
+                                            current_module = int(module_match.group(1))
+                                            total_modules = int(module_match.group(2))
+                                            if total_modules > 0:
+                                                module_percent = int((current_module / total_modules) * 100)
+                                                signals.task_progress.emit(module_percent)
+                                                signals.task_status.emit(f"Compiling module {current_module} of {total_modules}")
+                                                progress_updated = True
 
                                 # Check if process is still running
                                 if not term.isalive():
@@ -1160,9 +1332,14 @@ class ConfigEditorWindow(QMainWindow):
                         # Store the active process
                         self.active_process = process
 
-                        # Process output in real-time
+                        # Initialize dual progress tracking for subprocess
                         line_count = 0
-                        last_progress = 10
+                        
+                        # Set initial progress for subprocess
+                        signals.overall_progress.emit(overall_phases[current_phase]["start"])
+                        signals.overall_status.emit(overall_phases[current_phase]["message"])
+                        signals.task_progress.emit(0)
+                        signals.task_status.emit("Waiting for Nuitka output...")
 
                         # Process output in real-time
                         for line in iter(process.stdout.readline, ""):
@@ -1180,6 +1357,10 @@ class ConfigEditorWindow(QMainWindow):
                             # Send output to UI
                             signals.output.emit(clean_line)
                             line_count += 1
+                            
+                            # Debug: Log lines that might contain progress info
+                            if any(pattern in clean_line.lower() for pattern in ['%', 'compiling', 'progress', 'done', 'nuitka']):
+                                signals.output.emit(f"[DEBUG] Progress line detected: {clean_line.strip()}\n")
 
                             # Check for explicit progress markers
                             if clean_line.strip().startswith("PROGRESS:"):
@@ -1190,51 +1371,105 @@ class ConfigEditorWindow(QMainWindow):
                                         message = (
                                             parts[2].strip() if len(parts) > 2 else ""
                                         )
+                                        # Use legacy signals for explicit progress markers
                                         signals.progress.emit(progress)
-                                        last_progress = progress
                                         if message:
                                             signals.status.emit(message)
                                     continue
                                 except (ValueError, IndexError):
                                     pass
 
-                            # Update progress based on output content
-                            for marker, progress in progress_markers.items():
-                                if marker in clean_line and progress > last_progress:
-                                    signals.progress.emit(progress)
-                                    last_progress = progress
-                                    # Update status message based on the marker
-                                    if "Nuitka-Options:" in clean_line:
-                                        signals.status.emit(
-                                            "Configuring Nuitka options..."
-                                        )
-                                    elif "Starting Python compilation" in clean_line:
-                                        signals.status.emit(
-                                            "Starting Python compilation..."
-                                        )
-                                    elif "C compiler" in clean_line:
-                                        signals.status.emit("Setting up C compiler...")
-                                    elif "Compiling" in clean_line:
-                                        signals.status.emit(
-                                            "Compiling Python modules..."
-                                        )
-                                    elif "Generating" in clean_line:
-                                        signals.status.emit("Generating C code...")
-                                    elif "Building extension modules" in clean_line:
-                                        signals.status.emit(
-                                            "Building extension modules..."
-                                        )
-                                    elif "Linking" in clean_line:
-                                        signals.status.emit("Linking modules...")
-                                    elif "Packaging" in clean_line:
-                                        signals.status.emit("Packaging application...")
-                                    elif "Copying" in clean_line:
-                                        signals.status.emit("Copying dependencies...")
-                                    elif "Executable built successfully" in clean_line:
-                                        signals.status.emit(
-                                            "Build completed successfully!"
-                                        )
-                                    break
+                            # Enhanced dual progress tracking based on Nuitka output (subprocess version)
+                            progress_updated = False
+                            
+                            # First, check for Nuitka percentage progress patterns
+                            # Pattern 1: PASS 1: XX.X%|████████████████████▏ | 174/240, module_name (main Nuitka progress)
+                            pass_match = re.search(r'PASS\s+\d+:\s+(\d+(?:\.\d+)?)%.*?\|\s*(\d+)/(\d+),\s*(.+)', clean_line)
+                            if pass_match:
+                                nuitka_percent = float(pass_match.group(1))
+                                current_item = int(pass_match.group(2))
+                                total_items = int(pass_match.group(3))
+                                module_name = pass_match.group(4).strip()
+                                
+                                # Update task progress bar with Nuitka's internal progress
+                                signals.task_progress.emit(int(nuitka_percent))
+                                signals.task_status.emit(f"Compiling {module_name} ({current_item}/{total_items}) - {nuitka_percent:.1f}%")
+                                progress_updated = True
+                            
+                            # Pattern 2: [XX%] format
+                            elif re.search(r'\[(\d+)%\]', clean_line):
+                                percent_match = re.search(r'\[(\d+)%\]', clean_line)
+                                if percent_match:
+                                    nuitka_percent = int(percent_match.group(1))
+                                    signals.task_progress.emit(nuitka_percent)
+                                    
+                                    task_desc = clean_line.strip()
+                                    if len(task_desc) > 100:
+                                        task_desc = task_desc[:97] + "..."
+                                    signals.task_status.emit(task_desc)
+                                    progress_updated = True
+                            
+                            # Pattern 3: "XX% done" format
+                            elif re.search(r'(\d+)%\s+done', clean_line, re.IGNORECASE):
+                                percent_match = re.search(r'(\d+)%', clean_line)
+                                if percent_match:
+                                    nuitka_percent = int(percent_match.group(1))
+                                    signals.task_progress.emit(nuitka_percent)
+                                    signals.task_status.emit(clean_line.strip())
+                                    progress_updated = True
+                            
+                            # Pattern 4: "Progress: XX%" format
+                            elif re.search(r'progress:?\s*(\d+)%', clean_line, re.IGNORECASE):
+                                percent_match = re.search(r'(\d+)%', clean_line)
+                                if percent_match:
+                                    nuitka_percent = int(percent_match.group(1))
+                                    signals.task_progress.emit(nuitka_percent)
+                                    signals.task_status.emit(clean_line.strip())
+                                    progress_updated = True
+                            
+                            # Check for phase markers if no percentage was found
+                            if not progress_updated:
+                                for marker, marker_info in nuitka_markers.items():
+                                    if marker.lower() in clean_line.lower():
+                                        # Update current phase if needed
+                                        new_phase = marker_info["phase"]
+                                        if new_phase != current_phase:
+                                            current_phase = new_phase
+                                            # Reset task progress when entering new phase
+                                            signals.task_progress.emit(0)
+                                            last_task_progress = 0
+                                        
+                                        # Calculate overall progress based on phase
+                                        phase_info = overall_phases[current_phase]
+                                        phase_range = phase_info["end"] - phase_info["start"]
+                                        task_progress_in_phase = (marker_info["task_progress"] / 100) * phase_range
+                                        new_overall_progress = int(phase_info["start"] + task_progress_in_phase)
+                                        
+                                        # Update progress bars only if progress increased
+                                        if new_overall_progress > last_overall_progress:
+                                            signals.overall_progress.emit(new_overall_progress)
+                                            signals.overall_status.emit(phase_info["message"])
+                                            last_overall_progress = new_overall_progress
+                                        
+                                        # Update task progress
+                                        if marker_info["task_progress"] > last_task_progress:
+                                            signals.task_progress.emit(marker_info["task_progress"])
+                                            signals.task_status.emit(marker_info["message"])
+                                            last_task_progress = marker_info["task_progress"]
+                                        
+                                        break
+                            
+                            # Additional patterns for common Nuitka output
+                            # Pattern for "Compiling module 'xyz' (X of Y)"
+                            module_match = re.search(r'compiling.*?\((\d+)\s+of\s+(\d+)\)', clean_line, re.IGNORECASE)
+                            if module_match and not progress_updated:
+                                current_module = int(module_match.group(1))
+                                total_modules = int(module_match.group(2))
+                                if total_modules > 0:
+                                    module_percent = int((current_module / total_modules) * 100)
+                                    signals.task_progress.emit(module_percent)
+                                    signals.task_status.emit(f"Compiling module {current_module} of {total_modules}")
+                                    progress_updated = True
 
                         # Wait for process to finish
                         return_code = process.wait()
@@ -1375,13 +1610,33 @@ class ConfigEditorWindow(QMainWindow):
         # Reset modified state after build, assuming config was saved before build
         # self.set_modified(False) # Might be too aggressive, config might still be modified if build fails early
 
+    def update_overall_progress(self, value):
+        """Update the overall progress bar."""
+        if hasattr(self, "progress_dialog") and self.progress_dialog:
+            self.progress_dialog.update_overall_progress(value)
+
+    def update_overall_status(self, text):
+        """Update the overall status text."""
+        if hasattr(self, "progress_dialog") and self.progress_dialog:
+            self.progress_dialog.update_overall_status(text)
+
+    def update_task_progress(self, value):
+        """Update the current task progress bar."""
+        if hasattr(self, "progress_dialog") and self.progress_dialog:
+            self.progress_dialog.update_task_progress(value)
+
+    def update_task_status(self, text):
+        """Update the current task status text."""
+        if hasattr(self, "progress_dialog") and self.progress_dialog:
+            self.progress_dialog.update_task_status(text)
+
     def update_progress(self, value):
-        """Update the progress bar."""
-        self.progress_dialog.update_progress(value)
+        """Update the progress bar (legacy method)."""
+        self.update_overall_progress(value)
 
     def update_status(self, text):
-        """Update the status text."""
-        self.progress_dialog.update_status(text)
+        """Update the status text (legacy method)."""
+        self.update_overall_status(text)
 
     def build_executable(self):
         """Build the executable using the current configuration."""
