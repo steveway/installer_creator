@@ -330,6 +330,9 @@ def main(config_file="build_config.yaml", python_path=None):
         # required within ``build_nuitka_command`` it can detect the absence
         # of this key and operate on relative paths instead.
 
+        if not python_path:
+            python_path = config.get("project", {}).get("python_path")
+
         # Find Python executable - use provided path or find virtual environment Python
         if python_path:
             python_exe = python_path
@@ -468,12 +471,6 @@ def main(config_file="build_config.yaml", python_path=None):
                         print(f"Error processing PTY output from queue: {e}")
                         sys.stdout.flush()
                         break
-
-                # Final clear of heartbeat before checking return_code
-                if heartbeat_len > 0:
-                    sys.stderr.write("\r" + " " * heartbeat_len + "\r")
-                    sys.stderr.flush()
-                    heartbeat_len = 0
 
                 # Ensure reader thread is joined
                 if reader_thread.is_alive():
