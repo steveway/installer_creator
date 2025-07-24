@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "installer_creator"
-version = "0.2.1"
+version = "0.2.2"
 description = "Python package for compiling projects with Nuitka and creating Windows installers with Wix Toolset"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -12,7 +12,8 @@ dependencies = [
     "nuitka",
     "pyyaml",
     "psutil",
-    "rich"
+    "rich",
+    "pywinpty ; platform_system == 'Windows'"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -30,11 +31,6 @@ classifiers = [
 ]
 license = "LGPL-3.0-or-later"
 license-files = ["LICEN[CS]E*"]
-
-[project.optional-dependencies]
-windows = [
-    "pywinpty"
-]
 
 [tool.setuptools]
 packages = ["installer_creator"]
