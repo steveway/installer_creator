@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 from queue import Empty
 from typing import Any, Dict, List, Optional, Union
+import ctypes
 
 import yaml
 from PySide6.QtCore import QFile, QIODevice, QObject, Qt, QTimer, Signal, Slot
@@ -228,6 +229,9 @@ class ConfigEditorWindow(QMainWindow):
 
     def __init__(self, config_file=None):
         super().__init__()
+        if sys.platform == "win32":
+            self.myappid = u"steveway.installer_creator"
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(self.myappid)
 
         self.config_file = config_file or "build_config.yaml"
         self.config_data = {}
